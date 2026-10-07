@@ -4,7 +4,7 @@
   "private": true,
   "description": "Take-home test Gateplus.id - Content management (public + admin) dengan MERN stack + TypeScript",
   "scripts": {
-    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "install:all": "npm install --include=dev && npm install --include=dev --prefix server && npm install --include=dev --prefix client",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "seed": "npm run seed --prefix server",
