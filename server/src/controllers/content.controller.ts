@@ -80,7 +80,7 @@ export async function updateContent(req: Request<{ id: string }>, res: Response)
       status: input.status,
       published_at: input.status === 'published' ? (input.published_at ?? null) : null,
     },
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   );
 
   if (!content) {
