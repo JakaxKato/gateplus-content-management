@@ -22,6 +22,7 @@ export function useContents(params: ContentQueryParams) {
           page: params.page,
           limit: params.limit,
         },
+        auth: true,
       }),
     placeholderData: keepPreviousData,
   });
@@ -30,7 +31,7 @@ export function useContents(params: ContentQueryParams) {
 export function useContent(id: string | undefined) {
   return useQuery({
     queryKey: ['content', id],
-    queryFn: () => apiRequest<Content>(`/contents/${id}`),
+    queryFn: () => apiRequest<Content>(`/contents/${id}`, { auth: true }),
     enabled: Boolean(id),
   });
 }

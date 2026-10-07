@@ -35,7 +35,7 @@ function MiniThumbnail({ src, alt }: { src: string | null; alt: string }) {
 export function ContentTable({ items, onDelete }: ContentTableProps) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <ul className="divide-y divide-slate-100 md:hidden">
+      <ul className="divide-y divide-slate-100 lg:hidden">
         {items.map((content) => (
           <li key={content.id} className="space-y-3 p-4">
             <div className="flex items-start gap-3">
@@ -73,7 +73,7 @@ export function ContentTable({ items, onDelete }: ContentTableProps) {
         ))}
       </ul>
 
-      <div className="hidden overflow-x-auto md:block">
+      <div className="hidden overflow-x-auto lg:block">
         <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
           <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
             <tr>

@@ -14,20 +14,18 @@ const PAGE_SIZE = 9;
 export function ContentListPage() {
   const [searchInput, setSearchInput] = useState('');
   const [genre, setGenre] = useState('');
-  const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
 
   const search = useDebounce(searchInput, 400).trim();
-  const query = useContents({ search, genre, status, page, limit: PAGE_SIZE });
+  const query = useContents({ search, genre, status: 'published', page, limit: PAGE_SIZE });
 
   const items = query.data?.data ?? [];
   const meta = query.data?.meta;
-  const isFiltering = searchInput !== '' || genre !== '' || status !== '';
+  const isFiltering = searchInput !== '' || genre !== '';
 
   const resetFilters = () => {
     setSearchInput('');
     setGenre('');
-    setStatus('');
     setPage(1);
   };
 
@@ -39,25 +37,21 @@ export function ContentListPage() {
           Jelajahi konten terbaru
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
-          Cari berdasarkan judul, filter berdasarkan genre atau status, lalu buka detail content. Seluruh data diambil
-          dari REST API dengan pagination.
+          Cari berdasarkan judul, filter berdasarkan genre, lalu buka detail content. Halaman publik hanya menampilkan
+          content berstatus <span className="font-semibold text-slate-700">Published</span>; draft dikelola di panel
+          admin.
         </p>
       </section>
 
       <ContentFilters
         search={searchInput}
         genre={genre}
-        status={status}
         onSearchChange={(value) => {
           setSearchInput(value);
           setPage(1);
         }}
         onGenreChange={(value) => {
           setGenre(value);
-          setPage(1);
-        }}
-        onStatusChange={(value) => {
-          setStatus(value);
           setPage(1);
         }}
         onReset={resetFilters}

@@ -1,4 +1,5 @@
 import type { ApiErrorBody, ApiSuccess, FieldError } from '../types/content';
+import { readStoredToken } from './session-storage';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -16,10 +17,14 @@ export class ApiError extends Error {
   }
 }
 
-let tokenGetter: () => string | null = () => null;
+let currentToken: string | null = readStoredToken();
 
-export function setTokenGetter(getter: () => string | null): void {
-  tokenGetter = getter;
+export function setAuthToken(token: string | null): void {
+  currentToken = token;
+}
+
+export function getAuthToken(): string | null {
+  return currentToken;
 }
 
 export function onUnauthorized(handler: () => void): () => void {
@@ -51,7 +56,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers['Content-Type'] = 'application/json';
   }
   if (auth) {
-    const token = tokenGetter();
+    const token = getAuthToken();
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
