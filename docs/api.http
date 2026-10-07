@@ -1,0 +1,151 @@
+# Koleksi request API — Gateplus Content Management
+#
+# Cara pakai: buka file ini di VS Code dengan ekstensi "REST Client",
+# atau salin isinya ke Postman/Insomnia. Jalankan request dari atas ke bawah.
+#
+# Alur cepat:
+#   1. Jalankan "Login admin" dan salin token dari response.
+#   2. Tempel token ke variabel @token di bawah.
+#   3. Jalankan request create/update/delete.
+
+@baseUrl = http://localhost:5000/api
+@contentId = tempel-id-content-di-sini
+@token = tempel-token-dari-request-login
+
+### Health check — status server + koneksi database
+GET {{baseUrl}}/health
+
+### List content (publik: hanya content published)
+GET {{baseUrl}}/contents?page=1&limit=9
+
+### List content dengan search judul dan filter genre
+GET {{baseUrl}}/contents?search=neon&genre=Sci-Fi
+
+### List sebagai admin (dengan token: draft ikut terlihat)
+GET {{baseUrl}}/contents
+Authorization: Bearer {{token}}
+
+### List sebagai admin dengan filter status draft
+GET {{baseUrl}}/contents?status=draft
+Authorization: Bearer {{token}}
+
+### Detail content (published)
+GET {{baseUrl}}/contents/{{contentId}}
+
+### Login admin (salin token dari response ke variabel @token)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@gateplus.id",
+  "password": "admin123"
+}
+
+### Profil user yang sedang login
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### Create content — draft (published_at otomatis null)
+POST {{baseUrl}}/contents
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Judul Content Baru",
+  "description": "Deskripsi lengkap content baru untuk pengujian manual.",
+  "genre": "Action",
+  "thumbnail_url": "https://picsum.photos/seed/contoh-baru/800/450",
+  "status": "draft",
+  "published_at": null
+}
+
+### Create content — published (published_at wajib)
+POST {{baseUrl}}/contents
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Content Langsung Publish",
+  "description": "Content ini dibuat dengan status published dan tanggal publish.",
+  "genre": "Drama",
+  "thumbnail_url": "",
+  "status": "published",
+  "published_at": "2026-10-06"
+}
+
+### Update content (PUT, payload lengkap)
+PUT {{baseUrl}}/contents/{{contentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Judul Setelah Diubah",
+  "description": "Deskripsi setelah diubah melalui endpoint PUT.",
+  "genre": "Thriller",
+  "thumbnail_url": "https://picsum.photos/seed/contoh-ubah/800/450",
+  "status": "published",
+  "published_at": "2026-10-05"
+}
+
+### Delete content
+DELETE {{baseUrl}}/contents/{{contentId}}
+Authorization: Bearer {{token}}
+
+# ---------------------------------------------------------------------------
+# Contoh kasus error (semuanya mengembalikan format { success: false, message, errors? })
+# ---------------------------------------------------------------------------
+
+### 400 — body kosong (validasi per field)
+POST {{baseUrl}}/contents
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{}
+
+### 400 — status published tanpa published_at
+POST {{baseUrl}}/contents
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Tanpa Tanggal",
+  "description": "Contoh validasi published_at.",
+  "genre": "Action",
+  "status": "published"
+}
+
+### 400 — thumbnail URL tidak valid
+POST {{baseUrl}}/contents
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Thumbnail Salah",
+  "description": "Contoh validasi thumbnail URL.",
+  "genre": "Action",
+  "status": "draft",
+  "thumbnail_url": "bukan-url"
+}
+
+### 400 — genre di luar daftar
+GET {{baseUrl}}/contents?genre=GenreAneh
+
+### 401 — mutasi tanpa token
+POST {{baseUrl}}/contents
+Content-Type: application/json
+
+{
+  "title": "Tanpa Token",
+  "description": "Contoh request tanpa autentikasi.",
+  "genre": "Action",
+  "status": "draft"
+}
+
+### 403 — filter draft tanpa token (draft tidak terbuka untuk publik)
+GET {{baseUrl}}/contents?status=draft
+
+### 404 — content tidak ditemukan
+GET {{baseUrl}}/contents/000000000000000000000000
+
+### 404 — detail draft untuk pengunjung anonim (draft disembunyikan)
+GET {{baseUrl}}/contents/{{contentId}}
