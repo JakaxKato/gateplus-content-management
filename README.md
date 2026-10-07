@@ -228,7 +228,7 @@ Base URL: `http://localhost:5000/api`. Koleksi request siap pakai (REST Client/P
 ```json
 {
   "success": true,
-  "message": "Content berhasil dibuat.",
+  "message": "Konten berhasil dibuat.",
   "data": { "id": "…", "title": "…", "status": "draft", "…": "…" },
   "meta": { "page": 1, "limit": 9, "total": 12, "total_pages": 2 }
 }
@@ -360,6 +360,7 @@ Aturan validasi dijalankan di **dua tempat**: zod di backend sebagai sumber kebe
 11. **Komponen UI ditulis sendiri di atas Tailwind** (tanpa UI kit). Trade-off: lebih banyak kode komponen dasar, tetapi bundle kecil dan gaya konsisten.
 12. **Helmet + rate limit login.** Header keamanan standar dipasang dan login dibatasi per IP. Trade-off: rate limit berbasis memory store (cukup untuk single instance, perlu Redis bila di-scale horizontal).
 13. **State filter disimpan sebagai state komponen**, belum disinkronkan ke URL query. Trade-off: filter tidak bisa di-share lewat link, tetapi implementasi jauh lebih sederhana.
+14. **Bahasa visual dibatasi: netral warm-gray, aksi utama berwarna ink, satu accent amber.** Amber hanya muncul untuk state interaktif (focus ring, radio terpilih), sedangkan aksi utama memakai ink (`stone-900`) agar tidak ada dua elemen yang bersaing. Status tidak pernah dikomunikasikan lewat warna saja (selalu dot + label teks), radius dibatasi dua nilai (kontrol `rounded-md`, permukaan `rounded-lg`), tanpa gradient, tanpa backdrop blur, dan tanpa animasi lift saat hover. Target sentuh minimal 44 px dan ukuran teks input 16 px di layar kecil agar iOS tidak auto-zoom. Trade-off: tampilan lebih tenang dan mudah dipindai, tetapi kehilangan efek visual yang "menarik" — sebuah pilihan sadar karena katalog dibaca berulang dan panel admin adalah alat kerja harian.
 
 ### Trade-off MongoDB dibanding database relational
 

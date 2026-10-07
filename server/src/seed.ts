@@ -172,7 +172,17 @@ async function seed(): Promise<void> {
   await Promise.all([ContentModel.deleteMany({}), UserModel.deleteMany({})]);
 
   console.log(`Membuat ${seedContents.length} data content...`);
-  await ContentModel.insertMany(seedContents);
+
+  // created_at eksplisit supaya urutan daftar (sort created_at desc) masuk akal:
+  // konten published mengikuti tanggal publish, draft berada di paling atas
+  // karena belum punya tanggal publish dan masih berstatus pekerjaan berjalan.
+  const now = Date.now();
+  const docs = seedContents.map((item, index) => ({
+    ...item,
+    created_at: item.published_at ?? new Date(now - index * 60_000),
+  }));
+
+  await ContentModel.insertMany(docs);
 
   console.log('Membuat akun admin...');
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);

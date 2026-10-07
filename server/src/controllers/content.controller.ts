@@ -57,7 +57,7 @@ export async function getContentById(req: AuthRequest<{ id: string }>, res: Resp
   const isAdmin = Boolean(req.user);
 
   if (!content || (!isAdmin && content.status !== 'published')) {
-    throw AppError.notFound('Content tidak ditemukan.');
+    throw AppError.notFound('Konten tidak ditemukan.');
   }
 
   sendSuccess(res, content);
@@ -75,7 +75,7 @@ export async function createContent(req: AuthRequest, res: Response): Promise<vo
     published_at: input.status === 'published' ? (input.published_at ?? null) : null,
   });
 
-  sendSuccess(res, content, { status: 201, message: 'Content berhasil dibuat.' });
+  sendSuccess(res, content, { status: 201, message: 'Konten berhasil dibuat.' });
 }
 
 export async function updateContent(req: AuthRequest<{ id: string }>, res: Response): Promise<void> {
@@ -95,18 +95,18 @@ export async function updateContent(req: AuthRequest<{ id: string }>, res: Respo
   );
 
   if (!content) {
-    throw AppError.notFound('Content tidak ditemukan.');
+    throw AppError.notFound('Konten tidak ditemukan.');
   }
 
-  sendSuccess(res, content, { message: 'Content berhasil diperbarui.' });
+  sendSuccess(res, content, { message: 'Konten berhasil diperbarui.' });
 }
 
 export async function deleteContent(req: AuthRequest<{ id: string }>, res: Response): Promise<void> {
   const content = await ContentModel.findByIdAndDelete(req.params.id);
 
   if (!content) {
-    throw AppError.notFound('Content tidak ditemukan.');
+    throw AppError.notFound('Konten tidak ditemukan.');
   }
 
-  sendSuccess(res, null, { message: 'Content berhasil dihapus.' });
+  sendSuccess(res, null, { message: 'Konten berhasil dihapus.' });
 }
