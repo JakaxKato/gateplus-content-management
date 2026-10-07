@@ -8,7 +8,8 @@ Aplikasi content management dengan dua sisi: **halaman publik** untuk melihat co
 
 **Nama:** Jaka Kelana Wijaya
 **Repository:** https://github.com/JakaxKato/gateplus-content-management
-**Live Demo:** N/A (belum di-deploy; cara menjalankan lokal ada di bawah)
+**Live Demo:** https://gateplus-content-management.vercel.app
+**API produksi:** https://gateplus-content-management.onrender.com/api
 **Catatan:** Kredensial demo admin ada di bagian [Demo Credentials](#demo-credentials).
 
 ---
@@ -104,7 +105,7 @@ npm run db:down     # Hentikan container MongoDB
 
 ## Deploy (Opsional)
 
-Panduan singkat untuk mengisi kolom Live Demo. Urutannya: **database → backend → frontend**.
+Aplikasi ini sudah berjalan dengan kombinasi **Vercel (frontend) + Render (backend) + MongoDB Atlas (database)**. Langkah di bawah adalah cara mengulanginya dari nol.
 
 ### 1. Database — MongoDB Atlas (cluster M0 gratis)
 
@@ -383,7 +384,7 @@ Aturan validasi dijalankan di **dua tempat**: zod di backend sebagai sumber kebe
 - Filter & pagination belum tersimpan di URL, jadi belum bisa di-share lewat link.
 - Rate limit login memakai memory store (belum Redis) dan belum ada rate limit untuk endpoint mutasi.
 - Belum ada automated E2E test di browser; alur UI diverifikasi manual (bukti ada di `docs/screenshots/`).
-- Live demo belum tersedia (belum di-deploy), sehingga reviewer perlu menjalankan secara lokal.
+- Backend memakai free tier Render yang tidur setelah ~15 menit idle, sehingga request pertama setelah idle bisa terasa lambat.
 
 ## Demo Credentials
 
@@ -405,6 +406,7 @@ Terakhir diverifikasi di lingkungan pengembangan (Node 24, MongoDB 7 lewat Docke
 | Automated test | `npm test` | 32 test lolos |
 | Production build | `npm run build` | lolos (server + client) |
 | CI | GitHub Actions | hijau (badge di atas) |
+| Deployment produksi | Vercel + Render + MongoDB Atlas | health `database: connected`, daftar publik 12 content tanpa draft, filter draft oleh anonim `403`, detail draft anonim `404`, login admin melihat 16 content, CORS origin Vercel diizinkan, deep link SPA tidak 404 |
 | Alur manual | browser | list publik (hanya published), detail, search, filter genre, pagination, login admin, create (draft & published), edit, delete + konfirmasi, responsive mobile/tablet/desktop |
 
 ---
