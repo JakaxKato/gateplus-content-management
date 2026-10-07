@@ -91,6 +91,42 @@ const seedContents: SeedContent[] = [
     published_at: new Date('2026-07-10T00:00:00.000Z'),
   },
   {
+    title: 'Senandung dari Timur',
+    description:
+      'Seorang pemuda dari desa pesisir merantau ke kota besar untuk mengejar mimpi menjadi musisi. Perjalanannya penuh penolakan, tetapi juga pertemuan yang mengubah cara ia memandang kesuksesan.',
+    genre: 'Drama',
+    thumbnail_url: 'https://picsum.photos/seed/senandungtimur/800/450',
+    status: 'published',
+    published_at: new Date('2026-09-05T00:00:00.000Z'),
+  },
+  {
+    title: 'Legenda Laut Selatan',
+    description:
+      'Cerita rakyat tentang penjaga laut selatan diceritakan ulang dari sudut pandang seorang nelayan muda yang harus memilih antara janji leluhur dan keselamatan kampungnya.',
+    genre: 'Fantasy',
+    thumbnail_url: 'https://picsum.photos/seed/lautselatan/800/450',
+    status: 'published',
+    published_at: new Date('2026-06-28T00:00:00.000Z'),
+  },
+  {
+    title: 'Penjaga Menara Mercusuar',
+    description:
+      'Seorang penjaga mercusuar terisolasi mulai menerima pesan radio dari kapal yang menurut catatan sudah tenggelam puluhan tahun lalu.',
+    genre: 'Horror',
+    thumbnail_url: 'https://picsum.photos/seed/mercusuar/800/450',
+    status: 'published',
+    published_at: new Date('2026-06-15T00:00:00.000Z'),
+  },
+  {
+    title: 'Balapan Tanpa Batas',
+    description:
+      'Dua sahabat yang bersaing sejak kecil harus bekerja sama di ajang balapan terakhir mereka, ketika salah satu dari mereka kehilangan kemampuan mengemudi karena cedera.',
+    genre: 'Action',
+    thumbnail_url: 'https://picsum.photos/seed/balapantanpabatas/800/450',
+    status: 'published',
+    published_at: new Date('2026-05-30T00:00:00.000Z'),
+  },
+  {
     title: 'Rahasia Pulau Terlarang',
     description:
       'Sebuah ekspedisi ilmiah menemukan pulau yang tidak ada di peta modern. Apa yang mereka temukan di sana berpotensi mengubah sejarah peradaban, sekaligus mengancam keselamatan tim.',

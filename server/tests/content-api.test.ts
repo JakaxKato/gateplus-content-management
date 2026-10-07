@@ -21,11 +21,18 @@ interface ContentFixture {
   published_at?: Date | null;
 }
 
-const baseContent: ContentFixture = {
-  title: 'Content Uji',
+const draftFixture: ContentFixture = {
+  title: 'Content Draft',
   description: 'Deskripsi content untuk kebutuhan pengujian otomatis.',
   genre: 'Action',
   status: 'draft',
+};
+
+const publishedFixture: ContentFixture = {
+  ...draftFixture,
+  title: 'Content Published',
+  status: 'published',
+  published_at: new Date('2026-09-01T00:00:00.000Z'),
 };
 
 let token = '';
@@ -36,6 +43,10 @@ async function login(): Promise<string> {
     .send({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
 
   return response.body.data.token as string;
+}
+
+function withAuth(requestBuilder: request.Test): request.Test {
+  return requestBuilder.set('Authorization', `Bearer ${token}`);
 }
 
 beforeAll(async () => {
@@ -59,10 +70,11 @@ beforeEach(async () => {
 });
 
 describe('GET /api/contents', () => {
-  it('mengembalikan daftar content dengan meta pagination dan tanpa _id', async () => {
+  it('pengunjung anonim hanya menerima content published, dengan meta pagination', async () => {
     await ContentModel.create([
-      { ...baseContent, title: 'Content Pertama' },
-      { ...baseContent, title: 'Content Kedua' },
+      { ...publishedFixture, title: 'Published Pertama' },
+      { ...publishedFixture, title: 'Published Kedua', genre: 'Drama' },
+      { ...draftFixture, title: 'Draft Tersembunyi' },
     ]);
 
     const response = await request(app).get('/api/contents');
@@ -70,19 +82,51 @@ describe('GET /api/contents', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(2);
+    expect(response.body.data.every((item: { status: string }) => item.status === 'published')).toBe(true);
     expect(response.body.meta).toMatchObject({ page: 1, limit: 9, total: 2, total_pages: 1 });
     expect(response.body.data[0]).toHaveProperty('id');
     expect(response.body.data[0]).not.toHaveProperty('_id');
     expect(response.body.data[0]).not.toHaveProperty('__v');
   });
 
-  it('memfilter berdasarkan search judul (case-insensitive) dan genre', async () => {
+  it('admin dengan token melihat seluruh status', async () => {
     await ContentModel.create([
-      { ...baseContent, title: 'Neon Jakarta 2099', genre: 'Sci-Fi' },
-      { ...baseContent, title: 'Misteri Rumah Tua', genre: 'Horror' },
+      { ...publishedFixture, title: 'Published Satu' },
+      { ...draftFixture, title: 'Draft Satu' },
     ]);
 
-    const searchResponse = await request(app).get('/api/contents').query({ search: 'neon' });
+    const response = await withAuth(request(app).get('/api/contents'));
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta.total).toBe(2);
+    const statuses = response.body.data.map((item: { status: string }) => item.status).sort();
+    expect(statuses).toEqual(['draft', 'published']);
+  });
+
+  it('menolak filter status non-published untuk anonim dengan 403', async () => {
+    const response = await request(app).get('/api/contents').query({ status: 'draft' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toContain('admin');
+  });
+
+  it('mengizinkan filter status=published untuk anonim', async () => {
+    await ContentModel.create([publishedFixture, draftFixture]);
+
+    const response = await request(app).get('/api/contents').query({ status: 'published' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta.total).toBe(1);
+  });
+
+  it('memfilter berdasarkan search judul (case-insensitive) dan genre', async () => {
+    await ContentModel.create([
+      { ...publishedFixture, title: 'Neon Jakarta 2099', genre: 'Sci-Fi' },
+      { ...publishedFixture, title: 'Misteri Rumah Tua', genre: 'Horror' },
+    ]);
+
+    const searchResponse = await request(app).get('/api/contents').query({ search: 'NEON' });
     expect(searchResponse.status).toBe(200);
     expect(searchResponse.body.meta.total).toBe(1);
     expect(searchResponse.body.data[0].title).toBe('Neon Jakarta 2099');
@@ -94,7 +138,10 @@ describe('GET /api/contents', () => {
 
   it('membatasi jumlah item per halaman lewat query limit', async () => {
     await ContentModel.create(
-      Array.from({ length: 5 }, (_, index) => ({ ...baseContent, title: `Content ${index + 1}` })),
+      Array.from({ length: 5 }, (_, index) => ({
+        ...publishedFixture,
+        title: `Content ${index + 1}`,
+      })),
     );
 
     const response = await request(app).get('/api/contents').query({ page: 2, limit: 2 });
@@ -114,13 +161,30 @@ describe('GET /api/contents', () => {
 });
 
 describe('GET /api/contents/:id', () => {
-  it('mengembalikan detail content', async () => {
-    const content = await ContentModel.create({ ...baseContent, title: 'Detail Uji' });
+  it('mengembalikan detail content published', async () => {
+    const content = await ContentModel.create({ ...publishedFixture, title: 'Detail Uji' });
 
     const response = await request(app).get(`/api/contents/${content.id}`);
 
     expect(response.status).toBe(200);
     expect(response.body.data.title).toBe('Detail Uji');
+  });
+
+  it('menyembunyikan detail draft dari pengunjung anonim dengan 404', async () => {
+    const content = await ContentModel.create(draftFixture);
+
+    const response = await request(app).get(`/api/contents/${content.id}`);
+
+    expect(response.status).toBe(404);
+  });
+
+  it('mengizinkan admin membaca detail draft', async () => {
+    const content = await ContentModel.create(draftFixture);
+
+    const response = await withAuth(request(app).get(`/api/contents/${content.id}`));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.status).toBe('draft');
   });
 
   it('mengembalikan 404 untuk id valid yang tidak ada', async () => {
@@ -139,7 +203,7 @@ describe('GET /api/contents/:id', () => {
 
 describe('POST /api/contents', () => {
   it('menolak request tanpa token dengan 401', async () => {
-    const response = await request(app).post('/api/contents').send(baseContent);
+    const response = await request(app).post('/api/contents').send(draftFixture);
 
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
@@ -149,44 +213,46 @@ describe('POST /api/contents', () => {
     const response = await request(app)
       .post('/api/contents')
       .set('Authorization', 'Bearer token-palsu')
-      .send(baseContent);
+      .send(draftFixture);
 
     expect(response.status).toBe(401);
   });
 
   it('mengembalikan error validasi per field ketika body kosong', async () => {
-    const response = await request(app).post('/api/contents').set('Authorization', `Bearer ${token}`).send({});
+    const response = await withAuth(request(app).post('/api/contents')).send({});
 
     expect(response.status).toBe(400);
+    expect(response.body.message).toBe('Validasi gagal');
     const fields = response.body.errors.map((error: { field: string }) => error.field);
     expect(fields).toEqual(expect.arrayContaining(['title', 'description', 'genre', 'status']));
   });
 
   it('menolak status published tanpa published_at', async () => {
-    const response = await request(app)
-      .post('/api/contents')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...baseContent, status: 'published' });
+    const response = await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      status: 'published',
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.errors[0].field).toBe('published_at');
   });
 
   it('menolak thumbnail URL yang bukan http/https', async () => {
-    const response = await request(app)
-      .post('/api/contents')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...baseContent, thumbnail_url: 'bukan-url' });
+    const response = await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      thumbnail_url: 'bukan-url',
+    });
 
     expect(response.status).toBe(400);
     expect(response.body.errors[0].field).toBe('thumbnail_url');
   });
 
   it('membuat content draft baru dengan status 201', async () => {
-    const response = await request(app)
-      .post('/api/contents')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...baseContent, title: 'Content Baru', thumbnail_url: '' });
+    const response = await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      title: 'Content Baru',
+      thumbnail_url: '',
+    });
 
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({
@@ -200,41 +266,73 @@ describe('POST /api/contents', () => {
     expect(stored).toBe(1);
   });
 
+  it('mengabaikan published_at ketika status draft (konsistensi invariant)', async () => {
+    const response = await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      published_at: '2026-10-05',
+    });
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.status).toBe('draft');
+    expect(response.body.data.published_at).toBeNull();
+  });
+
   it('membuat content published dengan tanggal dari string ISO date', async () => {
-    const response = await request(app)
-      .post('/api/contents')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...baseContent, status: 'published', published_at: '2026-10-01' });
+    const response = await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      status: 'published',
+      published_at: '2026-10-01',
+    });
 
     expect(response.status).toBe(201);
     expect(response.body.data.status).toBe('published');
     expect(new Date(response.body.data.published_at).toISOString()).toBe('2026-10-01T00:00:00.000Z');
   });
+
+  it('content draft tidak muncul di daftar publik setelah dibuat', async () => {
+    await withAuth(request(app).post('/api/contents')).send({
+      ...draftFixture,
+      title: 'Draft Baru Via API',
+    });
+
+    const publicList = await request(app).get('/api/contents');
+    expect(publicList.body.meta.total).toBe(0);
+
+    const adminList = await withAuth(request(app).get('/api/contents'));
+    expect(adminList.body.meta.total).toBe(1);
+  });
 });
 
 describe('PUT /api/contents/:id', () => {
   it('memperbarui content dan mengosongkan published_at ketika status draft', async () => {
-    const content = await ContentModel.create({
-      ...baseContent,
-      status: 'published',
-      published_at: new Date('2026-09-01T00:00:00.000Z'),
-    });
+    const content = await ContentModel.create(publishedFixture);
 
-    const response = await request(app)
-      .put(`/api/contents/${content.id}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ ...baseContent, title: 'Judul Setelah Update', status: 'draft' });
+    const response = await withAuth(request(app).put(`/api/contents/${content.id}`)).send({
+      ...draftFixture,
+      title: 'Judul Setelah Update',
+    });
 
     expect(response.status).toBe(200);
     expect(response.body.data.title).toBe('Judul Setelah Update');
     expect(response.body.data.published_at).toBeNull();
   });
 
+  it('menolak perubahan ke published tanpa published_at', async () => {
+    const content = await ContentModel.create(draftFixture);
+
+    const response = await withAuth(request(app).put(`/api/contents/${content.id}`)).send({
+      ...draftFixture,
+      status: 'published',
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors[0].field).toBe('published_at');
+  });
+
   it('mengembalikan 404 untuk content yang tidak ada', async () => {
-    const response = await request(app)
-      .put('/api/contents/000000000000000000000000')
-      .set('Authorization', `Bearer ${token}`)
-      .send(baseContent);
+    const response = await withAuth(request(app).put('/api/contents/000000000000000000000000')).send(
+      draftFixture,
+    );
 
     expect(response.status).toBe(404);
   });
@@ -242,11 +340,9 @@ describe('PUT /api/contents/:id', () => {
 
 describe('DELETE /api/contents/:id', () => {
   it('menghapus content dan mengembalikan 404 saat diakses lagi', async () => {
-    const content = await ContentModel.create(baseContent);
+    const content = await ContentModel.create(publishedFixture);
 
-    const deleteResponse = await request(app)
-      .delete(`/api/contents/${content.id}`)
-      .set('Authorization', `Bearer ${token}`);
+    const deleteResponse = await withAuth(request(app).delete(`/api/contents/${content.id}`));
     expect(deleteResponse.status).toBe(200);
 
     const getResponse = await request(app).get(`/api/contents/${content.id}`);
@@ -254,10 +350,21 @@ describe('DELETE /api/contents/:id', () => {
   });
 
   it('menolak penghapusan tanpa token', async () => {
-    const content = await ContentModel.create(baseContent);
+    const content = await ContentModel.create(draftFixture);
 
     const response = await request(app).delete(`/api/contents/${content.id}`);
     expect(response.status).toBe(401);
+  });
+});
+
+describe('Invariant model Content', () => {
+  it('menetapkan published_at null untuk draft dan menolak published tanpa tanggal', async () => {
+    const draft = await ContentModel.create({ ...draftFixture, published_at: new Date() });
+    expect(draft.published_at).toBeNull();
+
+    await expect(ContentModel.create({ ...draftFixture, status: 'published' })).rejects.toThrow(
+      /Tanggal publish wajib diisi/,
+    );
   });
 });
 
@@ -291,11 +398,21 @@ describe('POST /api/auth/login', () => {
   });
 });
 
-describe('GET /api/health', () => {
-  it('mengembalikan status ok', async () => {
+describe('Konsistensi format response', () => {
+  it('endpoint tidak dikenal mengembalikan format error yang konsisten', async () => {
+    const response = await request(app).get('/api/tidak-ada');
+
+    expect(response.status).toBe(404);
+    expect(response.body).toMatchObject({ success: false });
+    expect(typeof response.body.message).toBe('string');
+  });
+
+  it('endpoint health mengembalikan status dan koneksi database', async () => {
     const response = await request(app).get('/api/health');
 
     expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
     expect(response.body.data.status).toBe('ok');
+    expect(response.body.data.database).toBe('connected');
   });
 });

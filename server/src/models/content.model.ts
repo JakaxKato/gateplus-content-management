@@ -55,6 +55,14 @@ const contentSchema = new Schema<ContentDoc>(
 
 contentSchema.index({ status: 1, genre: 1, created_at: -1 });
 
+contentSchema.pre('validate', function enforcePublishedAtInvariant() {
+  if (this.status === 'draft') {
+    this.published_at = null;
+  } else if (!this.published_at) {
+    this.invalidate('published_at', 'Tanggal publish wajib diisi jika status published');
+  }
+});
+
 contentSchema.set('toJSON', {
   transform: (_doc, ret) => {
     const json = ret as unknown as Record<string, unknown>;

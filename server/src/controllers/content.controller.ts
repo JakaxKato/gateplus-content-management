@@ -1,5 +1,6 @@
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import type { QueryFilter } from 'mongoose';
+import type { AuthRequest } from '../middlewares/auth.middleware.js';
 import { ContentModel, type ContentDoc } from '../models/content.model.js';
 import type { ContentBodyInput, ListContentsQuery } from '../schemas/content.schema.js';
 import { AppError } from '../utils/app-error.js';
@@ -9,8 +10,16 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export async function listContents(req: Request, res: Response): Promise<void> {
+export async function listContents(req: AuthRequest, res: Response): Promise<void> {
   const { search, genre, status, page, limit } = req.query as unknown as ListContentsQuery;
+
+  const isAdmin = Boolean(req.user);
+
+  if (!isAdmin && status && status !== 'published') {
+    throw AppError.forbidden('Filter status selain "published" hanya tersedia untuk admin.');
+  }
+
+  const effectiveStatus = isAdmin ? status : 'published';
 
   const filter: QueryFilter<ContentDoc> = {};
 
@@ -20,8 +29,8 @@ export async function listContents(req: Request, res: Response): Promise<void> {
   if (genre) {
     filter.genre = genre;
   }
-  if (status) {
-    filter.status = status;
+  if (effectiveStatus) {
+    filter.status = effectiveStatus;
   }
 
   const [items, total] = await Promise.all([
@@ -42,17 +51,19 @@ export async function listContents(req: Request, res: Response): Promise<void> {
   });
 }
 
-export async function getContentById(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function getContentById(req: AuthRequest<{ id: string }>, res: Response): Promise<void> {
   const content = await ContentModel.findById(req.params.id);
 
-  if (!content) {
+  const isAdmin = Boolean(req.user);
+
+  if (!content || (!isAdmin && content.status !== 'published')) {
     throw AppError.notFound('Content tidak ditemukan.');
   }
 
   sendSuccess(res, content);
 }
 
-export async function createContent(req: Request, res: Response): Promise<void> {
+export async function createContent(req: AuthRequest, res: Response): Promise<void> {
   const input = req.body as ContentBodyInput;
 
   const content = await ContentModel.create({
@@ -67,7 +78,7 @@ export async function createContent(req: Request, res: Response): Promise<void> 
   sendSuccess(res, content, { status: 201, message: 'Content berhasil dibuat.' });
 }
 
-export async function updateContent(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function updateContent(req: AuthRequest<{ id: string }>, res: Response): Promise<void> {
   const input = req.body as ContentBodyInput;
 
   const content = await ContentModel.findByIdAndUpdate(
@@ -90,7 +101,7 @@ export async function updateContent(req: Request<{ id: string }>, res: Response)
   sendSuccess(res, content, { message: 'Content berhasil diperbarui.' });
 }
 
-export async function deleteContent(req: Request<{ id: string }>, res: Response): Promise<void> {
+export async function deleteContent(req: AuthRequest<{ id: string }>, res: Response): Promise<void> {
   const content = await ContentModel.findByIdAndDelete(req.params.id);
 
   if (!content) {
