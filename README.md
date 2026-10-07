@@ -102,6 +102,62 @@ npm run db:down     # Hentikan container MongoDB
 
 > **Troubleshooting:** bila mesin Anda menetapkan `NODE_ENV=production` secara global, `npm install` akan melewati devDependencies (ESLint/Vitest/TypeScript). Gunakan `npm install --include=dev` di folder `server/` dan `client/`. Script `npm run install:all` sudah memakai flag tersebut.
 
+## Deploy (Opsional)
+
+Panduan singkat untuk mengisi kolom Live Demo. Urutannya: **database → backend → frontend**.
+
+### 1. Database — MongoDB Atlas (cluster M0 gratis)
+
+1. Buat cluster M0, lalu buat database user.
+2. Network Access → izinkan `0.0.0.0/0` (Render memakai IP keluar yang dinamis).
+3. Salin connection string `mongodb+srv://…/gateplus`.
+
+### 2. Backend — Render (Web Service)
+
+| Pengaturan | Nilai |
+| --- | --- |
+| Root Directory | `server` |
+| Build Command | `npm ci --include=dev && npm run build` |
+| Start Command | `npm start` |
+| Health Check Path | `/api/health` |
+
+Environment variables: `NODE_ENV=production`, `MONGODB_URI=<connection string Atlas>`, `JWT_SECRET=<string acak panjang>`, `JWT_EXPIRES_IN=7d`, `CLIENT_ORIGIN=https://<app>.vercel.app` (boleh beberapa origin dipisah koma, mis. untuk preview deployment).
+
+> **Penting:** `--include=dev` pada build command tidak boleh dihilangkan. Render menyetel `NODE_ENV=production`, dan pada kondisi itu `npm install` melewati devDependencies — TypeScript tidak terpasang sehingga `npm run build` gagal.
+
+> Layanan free tier Render tidur setelah ~15 menit idle, sehingga request pertama bisa terasa lambat.
+
+### 3. Frontend — Vercel
+
+| Pengaturan | Nilai |
+| --- | --- |
+| Root Directory | `client` (framework terdeteksi: Vite) |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Environment variable | `VITE_API_URL=https://<service>.onrender.com/api` |
+
+`VITE_API_URL` harus URL penuh beserta akhiran `/api` karena di produksi tidak ada proxy Vite. Nilai ini di-bake saat build, jadi setiap kali diubah perlu redeploy.
+
+Reload halaman pada route SPA (`/contents/:id`, `/admin/...`) ditangani oleh `client/vercel.json` yang me-rewrite semua path ke `index.html`.
+
+### 4. Seed database produksi
+
+Jalankan sekali dari lokal dengan mengarahkan `MONGODB_URI` ke Atlas. Variabel dari shell menang atas `.env` (dotenv tidak menimpa nilai yang sudah ada), jadi `.env` lokal tidak perlu diubah:
+
+```powershell
+cd server
+$env:MONGODB_URI="mongodb+srv://…/gateplus"
+npm run seed
+```
+
+### 5. Checklist setelah deploy
+
+- `https://<service>.onrender.com/api/health` mengembalikan `{"success":true,"data":{"status":"ok","database":"connected"}}`.
+- Halaman publik di Vercel menampilkan content (artinya `VITE_API_URL` dan `CLIENT_ORIGIN`/CORS benar).
+- Login admin berhasil, lalu create → edit → delete berjalan.
+- Perbarui kolom **Live Demo** di bagian atas README ini.
+
+
 ## Environment Variables
 
 Semua variabel server ada di `server/.env` (contoh lengkap: `server/.env.example`). File `.env` **tidak di-commit** — hanya `.env.example` yang masuk repository.
