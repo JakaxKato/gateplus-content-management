@@ -69,7 +69,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         aria-label="Tutup dialog"
         tabIndex={-1}
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-slate-900/40 backdrop-blur-sm"
+        className="absolute inset-0 cursor-default bg-stone-900/50"
       />
       <div
         ref={dialogRef}
@@ -77,19 +77,19 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-xl shadow-slate-900/10 outline-none sm:p-6"
+        className="relative w-full max-w-md rounded-lg border border-stone-200 bg-white p-5 shadow-lg outline-none"
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id="modal-title" className="text-lg font-bold text-slate-900">
+          <h2 id="modal-title" className="text-base font-semibold text-stone-900">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="-mr-1 -mt-1 inline-flex h-10 w-10 items-center justify-center rounded-md text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-700"
             aria-label="Tutup"
           >
-            <X className="h-5 w-5" aria-hidden="true" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         <div className="mt-3">{children}</div>

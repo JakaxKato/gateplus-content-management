@@ -1,17 +1,13 @@
 export function inputClasses(hasError = false): string {
-  return `h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-800 transition placeholder:text-slate-400 focus:ring-2 focus:outline-none ${
-    hasError
-      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-      : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
-  }`;
+  return `h-11 w-full rounded-md border bg-white px-3 text-base text-stone-900 transition-colors placeholder:text-stone-400 sm:h-10 sm:text-sm ${
+    hasError ? 'border-red-400' : 'border-stone-300 hover:border-stone-400'
+  } disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500`;
 }
 
 export function textareaClasses(hasError = false): string {
-  return `w-full rounded-lg border bg-white px-3 py-2.5 text-sm leading-relaxed text-slate-800 transition placeholder:text-slate-400 focus:ring-2 focus:outline-none ${
-    hasError
-      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-      : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100'
-  }`;
+  return `w-full rounded-md border bg-white px-3 py-2.5 text-base leading-relaxed text-stone-900 transition-colors placeholder:text-stone-400 sm:text-sm ${
+    hasError ? 'border-red-400' : 'border-stone-300 hover:border-stone-400'
+  } disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-500`;
 }
 
 export function selectClasses(hasError = false): string {

@@ -22,23 +22,23 @@ export function DeleteContentDialog({ content, onClose }: DeleteContentDialogPro
 
     deleteContent.mutate(content.id, {
       onSuccess: (response) => {
-        showToast(response.message ?? 'Content berhasil dihapus.', 'success');
+        showToast(response.message ?? 'Konten berhasil dihapus.', 'success');
         onClose();
       },
       onError: (error) => {
-        showToast(error instanceof ApiError ? error.message : 'Gagal menghapus content.', 'error');
+        showToast(error instanceof ApiError ? error.message : 'Gagal menghapus konten.', 'error');
       },
     });
   };
 
   return (
-    <Modal open={content !== null} title="Hapus content?" onClose={onClose}>
-      <p className="text-sm leading-relaxed text-slate-600">
-        Content <span className="font-semibold text-slate-900">“{content?.title}”</span> akan dihapus permanen dari
-        database. Tindakan ini tidak dapat dibatalkan.
+    <Modal open={content !== null} title="Hapus konten?" onClose={onClose}>
+      <p className="text-sm leading-relaxed text-stone-600">
+        Konten <span className="font-medium text-stone-900">“{content?.title}”</span> akan dihapus permanen dan tidak
+        bisa dikembalikan.
       </p>
 
-      <div className="mt-6 flex justify-end gap-2">
+      <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="secondary" onClick={onClose} disabled={deleteContent.isPending}>
           Batal
         </Button>
@@ -48,7 +48,7 @@ export function DeleteContentDialog({ content, onClose }: DeleteContentDialogPro
           loading={deleteContent.isPending}
           icon={<Trash2 className="h-4 w-4" aria-hidden="true" />}
         >
-          Ya, hapus
+          Hapus permanen
         </Button>
       </div>
     </Modal>

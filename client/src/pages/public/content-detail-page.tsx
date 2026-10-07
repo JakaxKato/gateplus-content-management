@@ -1,9 +1,11 @@
-import { ArrowLeft, CalendarClock, CalendarDays, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
-import { GenreBadge, StatusBadge } from '../../components/ui/badge';
+import { buttonClasses } from '../../components/ui/button-styles';
 import { DetailSkeleton, ErrorState } from '../../components/ui/feedback';
+import { GenreLabel, MetaSeparator, StatusIndicator } from '../../components/ui/meta';
 import { Thumbnail } from '../../components/ui/thumbnail';
+import { sectionLabel } from '../../components/ui/tokens';
 import { useContent } from '../../hooks/use-contents';
 import { ApiError } from '../../lib/api';
 import { formatDate } from '../../lib/format';
@@ -23,10 +25,10 @@ export function ContentDetailPage() {
       <div className="space-y-6">
         <BackLink />
         <ErrorState
-          title={isNotFound ? 'Content tidak ditemukan' : 'Gagal memuat content'}
+          title={isNotFound ? 'Konten tidak ditemukan' : 'Gagal memuat konten'}
           message={
             isNotFound
-              ? 'Content yang Anda cari mungkin sudah dihapus atau belum pernah ada.'
+              ? 'Konten ini mungkin sudah dihapus, belum dipublikasikan, atau tautannya salah.'
               : query.error instanceof ApiError
                 ? query.error.message
                 : 'Terjadi kesalahan tak terduga.'
@@ -43,69 +45,76 @@ export function ContentDetailPage() {
     <article className="space-y-6">
       <div className="flex items-center justify-between gap-3">
         <BackLink />
-        <Button variant="ghost" size="sm" icon={<RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />} onClick={() => void query.refetch()}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void query.refetch()}
+          icon={<RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />}
+        >
           Muat ulang
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <Thumbnail src={content.thumbnail_url} alt={`Thumbnail ${content.title}`} />
-            <div className="space-y-4 p-5 sm:p-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <GenreBadge genre={content.genre} />
-                <StatusBadge status={content.status} />
-              </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">{content.title}</h1>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">{content.description}</p>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="space-y-5">
+          <header className="space-y-3">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <GenreLabel genre={content.genre} />
+              <MetaSeparator />
+              <StatusIndicator status={content.status} />
+              <MetaSeparator />
+              <span className="text-xs tabular-nums text-stone-500">
+                {content.published_at ? formatDate(content.published_at) : 'Belum dipublikasikan'}
+              </span>
             </div>
-          </div>
+            <h1 className="text-2xl leading-tight font-semibold tracking-tight text-stone-900 sm:text-[28px]">
+              {content.title}
+            </h1>
+          </header>
+
+          <Thumbnail
+            src={content.thumbnail_url}
+            alt={`Thumbnail ${content.title}`}
+            className="rounded-lg border border-stone-200"
+          />
+
+          <section className="max-w-[68ch] space-y-2 pt-1">
+            <h2 className={sectionLabel}>Deskripsi</h2>
+            <p className="text-[15px] leading-[1.7] whitespace-pre-line text-stone-700">{content.description}</p>
+          </section>
         </div>
 
-        <aside className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xs font-bold tracking-widest text-slate-400 uppercase">Informasi</h2>
-            <dl className="mt-4 space-y-4 text-sm">
+        <aside className="space-y-6 lg:border-l lg:border-stone-200 lg:pl-6">
+          <section>
+            <h2 className={sectionLabel}>Informasi</h2>
+            <dl className="mt-3 space-y-3 text-sm">
               <div>
-                <dt className="text-xs font-semibold text-slate-500">Genre</dt>
-                <dd className="mt-1 font-semibold text-slate-800">{content.genre}</dd>
+                <dt className="text-stone-500">Genre</dt>
+                <dd className="mt-0.5 font-medium text-stone-800">{content.genre}</dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold text-slate-500">Status</dt>
+                <dt className="text-stone-500">Status</dt>
                 <dd className="mt-1">
-                  <StatusBadge status={content.status} />
+                  <StatusIndicator status={content.status} />
                 </dd>
               </div>
               <div>
-                <dt className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                  <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                  Tanggal publish
-                </dt>
-                <dd className="mt-1 font-semibold text-slate-800">
-                  {content.published_at ? formatDate(content.published_at) : 'Belum dipublikasikan'}
-                </dd>
+                <dt className="text-stone-500">Tanggal publish</dt>
+                <dd className="mt-0.5 tabular-nums text-stone-800">{formatDate(content.published_at)}</dd>
               </div>
               <div>
-                <dt className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                  <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
-                  Terakhir diperbarui
-                </dt>
-                <dd className="mt-1 font-semibold text-slate-800">{formatDate(content.updated_at)}</dd>
+                <dt className="text-stone-500">Terakhir diperbarui</dt>
+                <dd className="mt-0.5 tabular-nums text-stone-800">{formatDate(content.updated_at)}</dd>
               </div>
             </dl>
-          </div>
+          </section>
 
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-5">
-            <p className="text-sm text-indigo-900">
-              Ingin mengubah content ini? Buka panel admin untuk mengedit atau menghapusnya.
-            </p>
-            <Link to={`/admin/contents/${content.id}/edit`} className="mt-3 inline-flex">
-              <Button size="sm" variant="secondary">
-                Edit di panel admin
-              </Button>
+          <section>
+            <h2 className={sectionLabel}>Kelola</h2>
+            <Link to={`/admin/contents/${content.id}/edit`} className={buttonClasses('secondary', 'sm', 'mt-3')}>
+              Edit di panel admin
             </Link>
-          </div>
+          </section>
         </aside>
       </div>
     </article>
@@ -116,10 +125,10 @@ function BackLink() {
   return (
     <Link
       to="/contents"
-      className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
+      className="inline-flex items-center gap-1.5 rounded-md text-sm text-stone-600 transition-colors hover:text-stone-900"
     >
       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-      Kembali ke daftar content
+      Kembali ke katalog
     </Link>
   );
 }

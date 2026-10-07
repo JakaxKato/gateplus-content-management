@@ -39,8 +39,8 @@ export function ContentCreatePage() {
   return (
     <div>
       <AdminPageHeader
-        title="Tambah Content"
-        description="Lengkapi informasi content. Validasi dijalankan di frontend dan backend."
+        title="Tambah konten"
+        description="Lengkapi informasi konten. Validasi berjalan di browser dan di server."
       />
       <ContentForm
         mode="create"

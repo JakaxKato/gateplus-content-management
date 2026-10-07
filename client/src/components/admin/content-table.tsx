@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../../lib/format';
 import type { Content } from '../../types/content';
-import { GenreBadge, StatusBadge } from '../ui/badge';
+import { buttonClasses } from '../ui/button-styles';
+import { GenreLabel, StatusIndicator } from '../ui/meta';
 
 interface ContentTableProps {
   items: Content[];
@@ -15,7 +16,7 @@ function MiniThumbnail({ src, alt }: { src: string | null; alt: string }) {
 
   if (!src || failed) {
     return (
-      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-400">
+      <span className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md bg-stone-100 text-stone-400">
         <ImageOff className="h-4 w-4" aria-hidden="true" />
       </span>
     );
@@ -32,38 +33,36 @@ function MiniThumbnail({ src, alt }: { src: string | null; alt: string }) {
   );
 }
 
+function publishedLabel(content: Content): string {
+  return content.published_at ? formatDate(content.published_at) : '—';
+}
+
 export function ContentTable({ items, onDelete }: ContentTableProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <ul className="divide-y divide-slate-100 lg:hidden">
+    <div className="overflow-hidden rounded-lg border border-stone-200 bg-white">
+      <ul className="divide-y divide-stone-200 lg:hidden">
         {items.map((content) => (
-          <li key={content.id} className="space-y-3 p-4">
+          <li key={content.id} className="flex flex-col gap-3 p-4">
             <div className="flex items-start gap-3">
               <MiniThumbnail src={content.thumbnail_url} alt={`Thumbnail ${content.title}`} />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900">{content.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{content.description}</p>
+                <p className="text-sm font-medium text-stone-900">{content.title}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-stone-500">
+                  <GenreLabel genre={content.genre} />
+                  <span className="tabular-nums">{publishedLabel(content)}</span>
+                </p>
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <GenreBadge genre={content.genre} />
-              <StatusBadge status={content.status} />
-              <span className="text-xs text-slate-500">
-                {content.published_at ? formatDate(content.published_at) : 'Belum dipublikasikan'}
-              </span>
+              <StatusIndicator status={content.status} />
             </div>
             <div className="flex items-center gap-2">
-              <Link
-                to={`/admin/contents/${content.id}/edit`}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700"
-              >
+              <Link to={`/admin/contents/${content.id}/edit`} className={buttonClasses('secondary', 'sm', 'flex-1')}>
                 <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                 Edit
               </Link>
               <button
                 type="button"
                 onClick={() => onDelete(content)}
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                className={buttonClasses('danger-ghost', 'sm', 'flex-1')}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 Hapus
@@ -74,60 +73,51 @@ export function ContentTable({ items, onDelete }: ContentTableProps) {
       </ul>
 
       <div className="hidden overflow-x-auto lg:block">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-          <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
-            <tr>
-              <th scope="col" className="px-4 py-3 sm:px-5">
-                Content
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-stone-200 text-[11px] tracking-[0.08em] text-stone-500 uppercase">
+              <th scope="col" className="px-5 py-3 font-medium">
+                Konten
               </th>
-              <th scope="col" className="px-4 py-3">
-                Genre
-              </th>
-              <th scope="col" className="px-4 py-3">
+              <th scope="col" className="px-5 py-3 font-medium">
                 Status
               </th>
-              <th scope="col" className="px-4 py-3">
+              <th scope="col" className="px-5 py-3 font-medium">
                 Tanggal publish
               </th>
-              <th scope="col" className="px-4 py-3 text-right sm:px-5">
+              <th scope="col" className="px-5 py-3 text-right font-medium">
                 Aksi
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-stone-200">
             {items.map((content) => (
-              <tr key={content.id} className="transition hover:bg-slate-50/70">
-                <td className="max-w-xs px-4 py-3 sm:px-5">
+              <tr key={content.id} className="transition-colors hover:bg-stone-50">
+                <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
                     <MiniThumbnail src={content.thumbnail_url} alt={`Thumbnail ${content.title}`} />
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{content.title}</p>
-                      <p className="truncate text-xs text-slate-500">{content.description}</p>
+                      <p className="max-w-md truncate font-medium text-stone-900">{content.title}</p>
+                      <p className="mt-0.5">
+                        <GenreLabel genre={content.genre} />
+                      </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <GenreBadge genre={content.genre} />
+                <td className="px-5 py-3">
+                  <StatusIndicator status={content.status} />
                 </td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={content.status} />
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-slate-600">
-                  {content.published_at ? formatDate(content.published_at) : <span className="text-slate-400">-</span>}
-                </td>
-                <td className="px-4 py-3 sm:px-5">
-                  <div className="flex items-center justify-end gap-2">
-                    <Link
-                      to={`/admin/contents/${content.id}/edit`}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-indigo-300 hover:text-indigo-700"
-                    >
+                <td className="px-5 py-3 tabular-nums whitespace-nowrap text-stone-600">{publishedLabel(content)}</td>
+                <td className="px-5 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <Link to={`/admin/contents/${content.id}/edit`} className={buttonClasses('ghost', 'sm')}>
                       <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                       Edit
                     </Link>
                     <button
                       type="button"
                       onClick={() => onDelete(content)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                      className={buttonClasses('danger-ghost', 'sm')}
                     >
                       <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       Hapus

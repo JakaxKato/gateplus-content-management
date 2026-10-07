@@ -1,11 +1,11 @@
-import { Loader2, Plus, Search, X } from 'lucide-react';
+import { Loader2, Search, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { AdminPageHeader } from '../../components/admin/admin-page-header';
 import { ContentTable } from '../../components/admin/content-table';
 import { DeleteContentDialog } from '../../components/admin/delete-content-dialog';
 import { Button } from '../../components/ui/button';
 import { EmptyState, ErrorState, TableSkeleton } from '../../components/ui/feedback';
+import { inputClasses, selectClasses } from '../../components/ui/input-styles';
 import { Pagination } from '../../components/ui/pagination';
 import { useContents } from '../../hooks/use-contents';
 import { useDebounce } from '../../hooks/use-debounce';
@@ -36,18 +36,16 @@ export function AdminContentListPage() {
   return (
     <div>
       <AdminPageHeader
-        title="Kelola Content"
-        description="Semua content tersimpan di database dan dapat diubah kapan saja."
-        action={
-          <Link to="/admin/contents/new">
-            <Button icon={<Plus className="h-4 w-4" aria-hidden="true" />}>Tambah Content</Button>
-          </Link>
-        }
+        title="Kelola konten"
+        description="Semua konten tersimpan di database. Perubahan langsung tersimpan setelah disimpan."
       />
 
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_200px_auto]">
-        <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-stone-400"
+            aria-hidden="true"
+          />
           <input
             type="search"
             value={searchInput}
@@ -55,9 +53,9 @@ export function AdminContentListPage() {
               setSearchInput(event.target.value);
               setPage(1);
             }}
-            placeholder="Cari judul content..."
-            aria-label="Cari content"
-            className="h-11 w-full rounded-lg border border-slate-300 bg-white pr-9 pl-9 text-sm text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+            placeholder="Cari konten berdasarkan judul"
+            aria-label="Cari konten berdasarkan judul"
+            className={`${inputClasses()} pr-10 pl-9`}
           />
           {searchInput !== '' ? (
             <button
@@ -67,7 +65,7 @@ export function AdminContentListPage() {
                 setPage(1);
               }}
               aria-label="Hapus pencarian"
-              className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              className="absolute top-1/2 right-1.5 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-700"
             >
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -80,8 +78,8 @@ export function AdminContentListPage() {
             setStatus(event.target.value);
             setPage(1);
           }}
-          aria-label="Filter status"
-          className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 focus:outline-none"
+          aria-label="Filter berdasarkan status"
+          className={`${selectClasses()} sm:w-44`}
         >
           <option value="">Semua status</option>
           {CONTENT_STATUSES.map((item) => (
@@ -91,25 +89,19 @@ export function AdminContentListPage() {
           ))}
         </select>
 
-        <Button variant="secondary" onClick={resetFilters} disabled={!isFiltering} className="h-11">
+        <Button variant="ghost" onClick={resetFilters} disabled={!isFiltering}>
           Reset filter
         </Button>
       </div>
 
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">
-          {meta ? (
-            <>
-              <span className="font-semibold text-slate-700">{meta.total}</span> content ditemukan
-            </>
-          ) : (
-            'Memuat data...'
-          )}
+      <div className="mt-4 mb-3 flex items-center justify-between gap-3">
+        <p className="text-xs tabular-nums text-stone-500">
+          {meta ? `${meta.total} konten` : 'Memuat data...'}
         </p>
         {query.isFetching && !query.isPending ? (
-          <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-400">
+          <span className="inline-flex items-center gap-1.5 text-xs text-stone-500">
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            Memperbarui...
+            Memperbarui
           </span>
         ) : null}
       </div>
@@ -124,22 +116,18 @@ export function AdminContentListPage() {
         />
       ) : items.length === 0 ? (
         <EmptyState
-          title="Belum ada content"
+          title="Belum ada konten"
           description={
             isFiltering
-              ? 'Tidak ada content yang cocok dengan filter. Coba reset filter.'
-              : 'Mulai dengan membuat content pertama Anda.'
+              ? 'Tidak ada konten yang cocok dengan filter yang dipilih.'
+              : 'Mulai dengan membuat konten pertama Anda.'
           }
           action={
             isFiltering ? (
-              <Button variant="secondary" onClick={resetFilters}>
+              <Button variant="secondary" size="sm" onClick={resetFilters}>
                 Reset filter
               </Button>
-            ) : (
-              <Link to="/admin/contents/new">
-                <Button icon={<Plus className="h-4 w-4" aria-hidden="true" />}>Tambah Content</Button>
-              </Link>
-            )
+            ) : undefined
           }
         />
       ) : (

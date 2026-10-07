@@ -68,8 +68,8 @@ export function ContentEditPage() {
   return (
     <div>
       <AdminPageHeader
-        title="Edit Content"
-        description="Perubahan akan langsung tersimpan ke database melalui REST API."
+        title="Edit konten"
+        description="Perubahan tersimpan langsung ke database melalui REST API."
         action={
           <Button variant="secondary" onClick={reloadContent} loading={contentQuery.isRefetching}>
             Muat ulang data
