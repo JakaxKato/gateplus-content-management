@@ -345,7 +345,7 @@ Soal `published_at`, ada beberapa hal yang dijaga:
 
 - 32 automated test API (`npm test` di folder `server/`) memakai Vitest dan Supertest dengan database terpisah bernama `gateplus_test`. Yang diuji: daftar dan pagination, detail, pencarian, filter genre dan status, aturan visibilitas draft (403 dan 404 untuk anonim), create, update, delete, validasi per field, thumbnail URL tidak valid, published tanpa `published_at`, invariant model, mutasi tanpa token, konten yang tidak ada, konsistensi format response, login, dan health check.
 - ESLint dengan flat config untuk kedua package, `tsc --noEmit` untuk typecheck, dan build production untuk server maupun client.
-- CI GitHub Actions menjalankan lint, typecheck, test dengan service container MongoDB, dan build pada setiap push. Statusnya hijau dan terlihat di badge paling atas.
+- CI GitHub Actions menjalankan lint, typecheck, test dengan service container MongoDB, dan build pada push ke `main` dan pull request. Statusnya hijau dan terlihat di badge paling atas.
 
 ## Technical Decisions & Trade-offs
 
